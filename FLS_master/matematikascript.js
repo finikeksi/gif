@@ -1,5 +1,3 @@
-var j = 0;
-
 var start = 0;
 var points = [];
 var lengths = [];
@@ -14,24 +12,20 @@ function calculateLength(pointA, pointB) {
   return length;
 }
 
-function calculateLengths(points) {
-  for (var i = 0; i < points.length - 1; i++) {
-    lengths.push(calculateLength(points[i], points[i + 1]));
+function calculateLengths(point_s) {
+  for (var i = 0; i < point_s.length - 1; i++) {
+    lengths.push(
+      calculateLength(point_s[i].coordinates, point_s[i + 1].coordinates)
+    );
   }
 }
 
 function vectorize(points) {
   for (var i = 0; i < points.length - 1; i++) {
     vectors.push([
-      points[i + 1][0] - points[i][0],
-      points[i + 1][1] - points[i][1]
+      points[i + 1].coordinates[0] - points[i].coordinates[0],
+      points[i + 1].coordinates[1] - points[i].coordinates[1]
     ]);
-  }
-}
-
-function calculateAngles(vectors) {
-  for (var i = 0; i < vectors.length - 1; i++) {
-    vectorAngles.push(calculateAngle(vectors[i], vectors[i + 1]));
   }
 }
 
@@ -46,35 +40,76 @@ function calculateInitialAngle(firstPoint, secondPoint) {
   }
 }
 
-function calculateAngle(vectorA, vectorB) {
-  if (vectorA[1] < 0) {
-    vectorAngle1 =
-      2 * Math.PI -
-      Math.acos(vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2));
-  } else {
-    vectorAngle1 = Math.acos(
-      vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2)
-    );
+function calculateAngles(vectors) {
+  for (var i = 0; i < vectors.length - 1; i++) {
+    const angle = calculateAngle(vectors[i], vectors[i + 1], i);
+    vectorAngles.push(angle);
   }
-  if (vectorB[1] < 0) {
-    vectorAngle2 =
-      2 * Math.PI -
-      Math.acos(vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2));
-  } else {
-    vectorAngle2 = Math.acos(
-      vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2)
-    );
-  }
-  var finalAngle = vectorAngle2 - vectorAngle1;
-  if (Math.abs(finalAngle) > Math.PI) {
-    if (finalAngle > 0) {
-      finalAngle -= 2 * Math.PI;
+}
+
+function calculateAngle(vectorA, vectorB, pointNumber) {
+  console.log(pointNumber);
+  if (points[pointNumber].direction === points[pointNumber + 1].direction) {
+    if (vectorA[1] < 0) {
+      vectorAngle1 =
+        2 * Math.PI -
+        Math.acos(vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2));
     } else {
-      finalAngle += 2 * Math.PI;
+      vectorAngle1 = Math.acos(
+        vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2)
+      );
     }
+    if (vectorB[1] < 0) {
+      vectorAngle2 =
+        2 * Math.PI -
+        Math.acos(vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2));
+    } else {
+      vectorAngle2 = Math.acos(
+        vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2)
+      );
+    }
+    var finalAngle = vectorAngle2 - vectorAngle1;
+    if (Math.abs(finalAngle) > Math.PI) {
+      if (finalAngle > 0) {
+        finalAngle -= 2 * Math.PI;
+      } else {
+        finalAngle += 2 * Math.PI;
+      }
+    }
+    angles.push(finalAngle);
+    return finalAngle;
+  } else {
+    vectorB[0] = -vectorB[0];
+    vectorB[1] = -vectorB[1];
+    if (vectorA[1] < 0) {
+      vectorAngle1 =
+        2 * Math.PI -
+        Math.acos(vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2));
+    } else {
+      vectorAngle1 = Math.acos(
+        vectorA[0] / Math.sqrt(vectorA[0] ** 2 + vectorA[1] ** 2)
+      );
+    }
+    if (vectorB[1] < 0) {
+      vectorAngle2 =
+        2 * Math.PI -
+        Math.acos(vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2));
+    } else {
+      vectorAngle2 = Math.acos(
+        vectorB[0] / Math.sqrt(vectorB[0] ** 2 + vectorB[1] ** 2)
+      );
+    }
+    var finalAngle = vectorAngle2 - vectorAngle1;
+    if (Math.abs(finalAngle) > Math.PI) {
+      if (finalAngle > 0) {
+        finalAngle -= 2 * Math.PI;
+      } else {
+        finalAngle += 2 * Math.PI;
+      }
+    }
+    angles.push(finalAngle);
+    return finalAngle;
   }
-  angles.push(finalAngle);
-  return finalAngle;
 }
 
 function generateLists(points, vectors) {
@@ -83,7 +118,15 @@ function generateLists(points, vectors) {
   calculateAngles(vectors);
 }
 
-function onSubmit(event) {
+var points = [
+  { coordinates: [0, 0], direction: "forwards" },
+  { coordinates: [2, 2], direction: "forwards" },
+  { coordinates: [2, 1], direction: "backwards" }
+];
+generateLists();
+console.log(lenghts, angles);
+
+/*function onSubmit(event) {
   event.preventDefault();
   j += 1;
 
@@ -93,12 +136,15 @@ function onSubmit(event) {
   document.getElementById("x1").value = "";
   document.getElementById("y1").value = "";
 
-  points.push([x, y]);
+  points.push({
+    coordinates: [x, y],
+    direction: document.getElementById("direction").value
+  });
 
   generateLists(points, vectors);
 
   if (j == 2) {
-    calculateInitialAngle(points[0], points[1]);
+    calculateInitialAngle(points[0].coordinates, points[1].coordinates);
     var node1 = document.createElement("li");
     var textnode1 = document.createTextNode((start / Math.PI) * 180);
     node1.appendChild(textnode1);
@@ -128,4 +174,4 @@ function onSubmit(event) {
 }
 document.getElementById("x1").value = "";
 document.getElementById("y1").value = "";
-document.querySelector("form").onsubmit = onSubmit;
+document.querySelector("form").onsubmit = onSubmit;*/
